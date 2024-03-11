@@ -1,3 +1,71 @@
 #!/bin/bash
 
 POSIXLY_CORRECT=yes
+
+if [[ $# -eq 0 ]]; then
+    echo "Needed arguments missing!"
+    echo "Use -h, --help to display usage."
+    exit 1
+fi
+
+# OPTS: -h | --help, FILTR: -a DATETIME(after), -b DATETIME(before)
+# PRIKAZ: list USER 
+
+# Functions
+
+print_help() {
+  echo "Usage: $0 [-h |--help] [FILTR] [PRIKAZ] UZIVATEL LOG [LOG2 [...]]"
+  echo ""
+  echo ""
+  echo "Options:"
+  echo "  -h, --help      Display this help and exit"
+  echo "  FILTR           Use of the -a -b -c flags to filter out the desired output"
+  echo "    -a DATETIME     Filter to find rows after a timestamp DATETIME format = YYYY-MM-DD HH:MM:SS"
+  echo "    -b DATETIME     Filter to find rows before a timestamp DATETIME format = YYYY-MM-DD HH:MM:SS"
+  echo "    -c CURRENCY     Filter to find rows corresponding to trades using CURRENCY format = 3 letter names (ex. ETH, BTC..)"
+  echo "  UZIVATEL        A continuous string value representing the username"
+  echo "  LOG, LOG2, ...  Plain text files [can also be comprimed .gz] without specified suffix ('.*')"
+  echo ""
+}
+
+# Variables
+args="$*"
+datetimeB=""
+datetimeA=""
+currency=""
+
+
+
+# substitute --help into -h for better workflow later on
+substitute=$(echo "$args" | sed 's/--help/-h/g')
+eval set -- "$substitute"
+
+# Set variables based on arguments
+while getopts ":ha:b:c: " opt; do
+    case "${opt}" in
+        h) 
+            print_help
+            exit 0
+            ;;
+        a) 
+            datetimeA=$OPTARG
+            ;;
+        b) 
+            datetimeB=$OPTARG
+            ;;
+        c) 
+            currency=$OPTARG
+            ;;
+        \?) 
+            echo "Invalid arguments specified - $OPTARG"
+            exit 1
+            ;;
+        *) echo "Idk"
+            ;;
+    esac
+done
+echo "$datimeA"
+echo "$datimeB"
+echo "$currency"
+
+
