@@ -13,7 +13,7 @@ fi
 
 # Functions
 
-print_help() {
+function print_help() {
   echo "Usage: $0 [-h |--help] [FILTR] [PRIKAZ] UZIVATEL LOG [LOG2 [...]]"
   echo ""
   echo ""
@@ -28,8 +28,13 @@ print_help() {
   echo ""
 }
 
+# function check_datetime(){
+# }
+
 # Variables
 args="$*"
+uzivatel=""
+logs=()
 datetimeB=""
 datetimeA=""
 currency=""
@@ -37,35 +42,57 @@ currency=""
 
 
 # substitute --help into -h for better workflow later on
-substitute=$(echo "$args" | sed 's/--help/-h/g')
-eval set -- "$substitute"
+# substitute=$(echo "$args" | sed 's/--help/-h/')
+# eval set -- "$substitute"
+
+if [[ "$args" == *"--help"* || "$args" == *"-h"* ]]; then
+    print_help
+    exit 0
+fi
+
 
 # Set variables based on arguments
-while getopts ":ha:b:c: " opt; do
+while getopts ":a:b:c: " opt; do
     case "${opt}" in
-        h) 
-            print_help
-            exit 0
-            ;;
         a) 
-            datetimeA=$OPTARG
+            datetimeA="$OPTARG"
             ;;
         b) 
-            datetimeB=$OPTARG
+            datetimeB="$OPTARG"
             ;;
         c) 
-            currency=$OPTARG
+            currency="$OPTARG"
             ;;
         \?) 
             echo "Invalid arguments specified - $OPTARG"
             exit 1
             ;;
-        *) echo "Idk"
-            ;;
     esac
 done
-echo "$datimeA"
-echo "$datimeB"
-echo "$currency"
 
+echo $datetimeA
+echo $datetimeB
+echo $currency
+
+shift $((OPTIND -1))
+
+for arg in "$@"; do 
+    if [[ -f "$arg" ]]; then
+        files+=("$arg")
+    else
+        if [[ -n "$uzivatel" ]]; then
+            echo "Too many non-file arguments $@"
+            exit 1
+        else
+            uzivatel="$arg"
+        fi
+    fi
+done
+
+
+echo "Uzivatel: $uzivatel"
+echo "Files:"
+for file in "${files[@]}"; do
+  echo "$file"
+done
 
