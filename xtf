@@ -29,15 +29,35 @@ function print_help() {
 }
 
 function print_error(){
-    echo "$1"
+    echo "$1" >&2
     if [[ "$2" -ne 0 ]]; then
-        exit $2
-        
+        exit "$2"
     fi
 }
 
-# function check_datetime(){
-# }
+# TODO $() problem when using exit 
+function check_datetime(){
+    if [[ -z "$1" ]]; then
+        print_error "Invalid date. Use a correct date or get help via -h or --help" 1
+        echo ""
+        return 1
+    fi
+
+    local DATETIME
+    local format
+
+    DATETIME="$1"
+    format=$(date -d "$DATETIME" "+%Y-%m-%d %H:%M:%S" 2>/dev/null)
+
+    if [[ -z "$format" ]]; then
+        print_error "Invalid date. Use a correct date or get help via -h or --help" 1
+        echo ""
+        return 1
+    else
+        echo "$format"
+        return 0
+    fi
+}
 
 # Variables
 args="$*"
@@ -55,13 +75,15 @@ fi
 
 
 # Set variables based on arguments
-while getopts ":a:b:c: " opt; do
+while getopts ":a:b:c:" opt; do
     case "${opt}" in
         a) 
             datetimeA="$OPTARG"
+            after=$(check_datetime "$datetimeA")
             ;;
         b) 
             datetimeB="$OPTARG"
+            before=$(check_datetime "$datetimeB")
             ;;
         c) 
             currency="$OPTARG"
@@ -74,10 +96,7 @@ while getopts ":a:b:c: " opt; do
 done
 
 
-
 shift $((OPTIND -1))
-
-
 
 # TODO add logic to parse prikazy when ommited default=list
 option_count=0
@@ -99,18 +118,13 @@ for option in "$@"; do
 done
 
 
-echo "AFTER ARGS"
-echo ""
-
-echo "$# num; , $*"
-
 if [[ "$selected_option" == "" && "$option_count" -eq 0 ]]; then
     selected_option="list"
 fi
 
 for arg in "$@"; do 
     if [[ -f "$arg" ]]; then
-        files+=("$arg")
+        logs+=("$arg")
     else
         if [[ -n "$uzivatel" ]]; then
             echo "Too many non-file arguments $*"
@@ -124,14 +138,14 @@ done
 
 echo "Uzivatel: $uzivatel"
 echo "Files:"
-for file in "${files[@]}"; do
+for file in "${logs[@]}"; do
     echo "$file"
 done
 
 echo ""
 echo "ALL ARGS, VARS"
 
-echo "-a $datetimeA -b $datetimeB -c $currency"
+echo "-a $after -b $before -c $currency option: $selected_option"
 
 echo "$# num; , $*"
 
