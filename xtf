@@ -88,6 +88,7 @@ for option in "$@"; do
         list | list-currency | status | profit)
             selected_option="$option"
             ((option_count++))
+            shift
             ;;
         *)
             if [[ "$option_count" -gt 1 ]]; then
@@ -97,7 +98,6 @@ for option in "$@"; do
     esac
 done
 
-shift $((OPTIND -1))
 
 echo "AFTER ARGS"
 echo ""
