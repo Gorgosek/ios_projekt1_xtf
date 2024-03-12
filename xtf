@@ -14,18 +14,26 @@ fi
 # Functions
 
 function print_help() {
-  echo "Usage: $0 [-h |--help] [FILTR] [PRIKAZ] UZIVATEL LOG [LOG2 [...]]"
-  echo ""
-  echo ""
-  echo "Options:"
-  echo "  -h, --help      Display this help and exit"
-  echo "  FILTR           Use of the -a -b -c flags to filter out the desired output"
-  echo "    -a DATETIME     Filter to find rows after a timestamp DATETIME format = YYYY-MM-DD HH:MM:SS"
-  echo "    -b DATETIME     Filter to find rows before a timestamp DATETIME format = YYYY-MM-DD HH:MM:SS"
-  echo "    -c CURRENCY     Filter to find rows corresponding to trades using CURRENCY format = 3 letter names (ex. ETH, BTC..)"
-  echo "  UZIVATEL        A continuous string value representing the username"
-  echo "  LOG, LOG2, ...  Plain text files [can also be comprimed .gz] without specified suffix ('.*')"
-  echo ""
+    echo "Usage: $0 [-h |--help] [FILTR] [PRIKAZ] UZIVATEL LOG [LOG2 [...]]"
+    echo ""
+    echo ""
+    echo "Options:"
+    echo "  -h, --help      Display this help and exit"
+    echo "  FILTR           Use of the -a -b -c flags to filter out the desired output"
+    echo "    -a DATETIME     Filter to find rows after a timestamp DATETIME format = YYYY-MM-DD HH:MM:SS"
+    echo "    -b DATETIME     Filter to find rows before a timestamp DATETIME format = YYYY-MM-DD HH:MM:SS"
+    echo "    -c CURRENCY     Filter to find rows corresponding to trades using CURRENCY format = 3 letter names (ex. ETH, BTC..)"
+    echo "  UZIVATEL        A continuous string value representing the username"
+    echo "  LOG, LOG2, ...  Plain text files [can also be comprimed .gz] without specified suffix ('.*')"
+    echo ""
+}
+
+function print_error(){
+    echo "$1"
+    if [[ "$2" -ne 0 ]]; then
+        exit $2
+        
+    fi
 }
 
 # function check_datetime(){
@@ -71,14 +79,38 @@ echo $currency
 
 shift $((OPTIND -1))
 
+
+
 # TODO add logic to parse prikazy when ommited default=list
+option_count=0
+selected_option=""
+
+for option in "$@"; do
+    case "$option" in
+        list | list-currency | status | profit)
+            selected_option="$option"
+            ((option_count++))
+            ;;
+        *)
+            if [[ "$option_count" -gt 1 ]]; then
+                print_error "Too many options selected chose only one!" 0
+            fi
+            ;;
+    esac
+done
+
+shift
+
+if [[ "$selected_option" == "" && "$option_count" -eq 0 ]]; then
+    selected_option="list"
+fi
 
 for arg in "$@"; do 
     if [[ -f "$arg" ]]; then
         files+=("$arg")
     else
         if [[ -n "$uzivatel" ]]; then
-            echo "Too many non-file arguments $@"
+            echo "Too many non-file arguments $*"
             exit 1
         else
             uzivatel="$arg"
@@ -90,6 +122,11 @@ done
 echo "Uzivatel: $uzivatel"
 echo "Files:"
 for file in "${files[@]}"; do
-  echo "$file"
+    echo "$file"
+done
+
+echo "ALL ARGS"
+for arg in "$@"; do 
+    echo "$arg"
 done
 
