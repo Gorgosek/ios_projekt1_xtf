@@ -73,9 +73,7 @@ while getopts ":a:b:c: " opt; do
     esac
 done
 
-echo $datetimeA
-echo $datetimeB
-echo $currency
+
 
 shift $((OPTIND -1))
 
@@ -93,13 +91,18 @@ for option in "$@"; do
             ;;
         *)
             if [[ "$option_count" -gt 1 ]]; then
-                print_error "Too many options selected chose only one!" 0
+                print_error "Too many options selected chose only one!" 1
             fi
             ;;
     esac
 done
 
-shift
+shift $((OPTIND -1))
+
+echo "AFTER ARGS"
+echo ""
+
+echo "$# num; , $*"
 
 if [[ "$selected_option" == "" && "$option_count" -eq 0 ]]; then
     selected_option="list"
@@ -125,8 +128,12 @@ for file in "${files[@]}"; do
     echo "$file"
 done
 
-echo "ALL ARGS"
-for arg in "$@"; do 
-    echo "$arg"
-done
+echo ""
+echo "ALL ARGS, VARS"
+
+echo "-a $datetimeA -b $datetimeB -c $currency"
+
+echo "$# num; , $*"
+
+
 
