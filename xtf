@@ -35,11 +35,18 @@ function print_error(){
     fi
 }
 
-# TODO $() problem when using exit 
+# Throws an error to overcome subshells in a function used for $after,$before with the check_datetime func.
+function throw_error(){
+    if [[ "$1" == "0" ]]; then
+        exit 1
+    fi
+
+}
+
 function check_datetime(){
     if [[ -z "$1" ]]; then
-        print_error "Invalid date. Use a correct date or get help via -h or --help" 1
-        echo ""
+        print_error "Invalid date. Use a correct date or get help via -h or --help" 0
+        echo "0"
         return 1
     fi
 
@@ -50,8 +57,8 @@ function check_datetime(){
     format=$(date -d "$DATETIME" "+%Y-%m-%d %H:%M:%S" 2>/dev/null)
 
     if [[ -z "$format" ]]; then
-        print_error "Invalid date. Use a correct date or get help via -h or --help" 1
-        echo ""
+        print_error "Invalid date. Use a correct date or get help via -h or --help" 0
+        echo "0"
         return 1
     else
         echo "$format"
@@ -73,6 +80,8 @@ if [[ "$args" == *"--help"* || "$args" == *"-h"* ]]; then
     exit 0
 fi
 
+after=""
+before=""
 
 # Set variables based on arguments
 while getopts ":a:b:c:" opt; do
@@ -94,6 +103,9 @@ while getopts ":a:b:c:" opt; do
             ;;
     esac
 done
+
+throw_error "$after"
+throw_error "$before"
 
 
 shift $((OPTIND -1))
