@@ -35,18 +35,18 @@ function print_error(){
     fi
 }
 
-# Throws an error to overcome subshells in a function used for $after,$before with the check_datetime func.
+# Checks subshell for exit status and exits
 function throw_error(){
-    if [[ "$1" == "0" ]]; then
-        exit 1
+    error="$?"
+    if [[ "$error" != "0" ]]; then
+        exit "$error"
     fi
-
 }
 
 function check_datetime(){
     if [[ -z "$1" ]]; then
-        print_error "Invalid date. Use a correct date or get help via -h or --help" 0
-        echo "0"
+        print_error "Field date not specified." 1
+        echo ""
         return 1
     fi
 
@@ -57,8 +57,8 @@ function check_datetime(){
     format=$(date -d "$DATETIME" "+%Y-%m-%d %H:%M:%S" 2>/dev/null)
 
     if [[ -z "$format" ]]; then
-        print_error "Invalid date. Use a correct date or get help via -h or --help" 0
-        echo "0"
+        print_error "Invalid date. Use a correct date or get help via -h or --help" 1
+        echo ""
         return 1
     else
         echo "$format"
@@ -104,13 +104,11 @@ while getopts ":a:b:c:" opt; do
     esac
 done
 
-throw_error "$after"
-throw_error "$before"
-
+# Throws an error if check_datetime exits with 1
+throw_error 
 
 shift $((OPTIND -1))
 
-# TODO add logic to parse prikazy when ommited default=list
 option_count=0
 selected_option=""
 
@@ -145,6 +143,23 @@ for arg in "$@"; do
             uzivatel="$arg"
         fi
     fi
+done
+
+for log in "${logs[@]}"; do 
+    case "$selected_option" in
+        list)
+            awk -F';' -v uziv="$uzivatel" '$1 == uziv {print $0}' "$log" 
+            ;;
+        list-currency) 
+            awk -F';' -v uziv="$uzivatel" -v cur="$currency" '$1 == uziv && $ {print $0}' "$log" | sort -t';' -k3,3
+            ;;
+        status)
+            ;;
+        profit)
+            ;;
+        *) echo default
+            ;;
+    esac
 done
 
 
