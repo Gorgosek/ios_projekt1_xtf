@@ -70,6 +70,8 @@ function check_datetime(){
 
 # TODO create functions for each of the options then combine them using | and solve for all
 # JMENO UZIVATELE;DATUM A CAS;MENA;HODNOTA
+XTF_PROFIT=0.2
+
 function awk_list ()
 {
     USERNAME="$1"
@@ -93,11 +95,23 @@ function awk_status()
     CHOSEN_CURRENCY="$2"
     echo "$FILTERED_INPUT" | awk -F';' -v curr="$CHOSEN_CURRENCY" '$3 == curr {sum+=$NF} END {printf "%s : %.4f\n", curr, sum}'
 }
-#
-# function awk_profit()
-# {
-#     
-# }
+
+function awk_profit()
+{
+    FILTERED_INPUT="$1"
+    CHOSEN_CURRENCY="$2"
+    echo "$FILTERED_INPUT" | awk -F';' -v curr="$CHOSEN_CURRENCY" -v prof=$XTF_PROFIT '{
+        if ($3 == curr) {
+            if ($NF > 0) {
+                sum += ($NF * (1 + prof))
+            } else {
+                sum += $NF
+            }
+        }
+    } END {
+        printf "%s : %.4f\n", curr, sum
+    }'
+}
 
 # Variables
 args="$*"
@@ -202,6 +216,10 @@ case "$selected_option" in
         done <<< "$(awk_list_currency "$result")"
         ;;
     profit)
+        # For each currency
+        while IFS= read -r curr; do
+            awk_profit "$result" "$curr"
+        done <<< "$(awk_list_currency "$result")"
         ;;
 esac
 
