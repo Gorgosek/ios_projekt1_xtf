@@ -28,7 +28,6 @@ function print_help() {
     echo ""
 }
 
-# TODO create functions for each of the options then combine them using | and solve for all
 # TODO fix getopts
 
 function print_error(){
@@ -68,6 +67,28 @@ function check_datetime(){
         return 0
     fi
 }
+
+# TODO create functions for each of the options then combine them using | and solve for all
+# JMENO UZIVATELE;DATUM A CAS;MENA;HODNOTA
+function awk_list ()
+{
+    awk -F';' -v uziv="$uzivatel" '$1 == uziv {print $0}' "$log" 
+}
+
+function awk_list_currency ()
+{
+   echo "$result" | awk -F';' '{print $3}'| uniq | sort -d
+}
+#
+# function awk_status()
+# {
+#     
+# }
+#
+# function awk_profit()
+# {
+#     
+# }
 
 # Variables
 args="$*"
@@ -148,22 +169,26 @@ for arg in "$@"; do
     fi
 done
 
+result=""
 for log in "${logs[@]}"; do 
-    case "$selected_option" in
-        list)
-            awk -F';' -v uziv="$uzivatel" '$1 == uziv {print $0}' "$log" 
-            ;;
-        list-currency) 
-            awk -F';' -v uziv="$uzivatel" -v cur="$currency" '$1 == uziv && $ {print $0}' "$log" | sort -t';' -k3,3
-            ;;
-        status)
-            ;;
-        profit)
-            ;;
-        *) echo default
-            ;;
-    esac
+    result+=$(awk_list)
 done
+    
+
+case "$selected_option" in
+    list)
+        echo "$result"
+        ;;
+    list-currency) 
+        awk_list_currency
+        ;;
+    status)
+        ;;
+    profit)
+        ;;
+    *) echo default
+        ;;
+esac
 
 
 echo "Uzivatel: $uzivatel"
