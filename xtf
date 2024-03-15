@@ -28,6 +28,9 @@ function print_help() {
     echo ""
 }
 
+# TODO create functions for each of the options then combine them using | and solve for all
+# TODO fix getopts
+
 function print_error(){
     echo "$1" >&2
     if [[ "$2" -ne 0 ]]; then
