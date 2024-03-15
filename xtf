@@ -28,7 +28,7 @@ function print_help() {
     echo ""
 }
 
-# TODO fix getopts
+# TODO fix getopts not working when uzivatel infront of option either :/
 
 function print_error(){
     echo "$1" >&2
@@ -72,18 +72,27 @@ function check_datetime(){
 # JMENO UZIVATELE;DATUM A CAS;MENA;HODNOTA
 function awk_list ()
 {
-    awk -F';' -v uziv="$uzivatel" '$1 == uziv {print $0}' "$log" 
+    USERNAME="$1"
+    LOGFILE="$2"
+    awk -F';' -v uziv="$USERNAME" '$1 == uziv {print $0}' "$LOGFILE" 
 }
 
 function awk_list_currency ()
 {
-   echo "$result" | awk -F';' '{print $3}'| uniq | sort -d
+    FILTERED_INPUT="$1"
+    echo "$FILTERED_INPUT" | awk -F';' '{print $3}'| uniq | sort -d
 }
-#
-# function awk_status()
-# {
-#     
-# }
+
+function sanitize_blank_lines(){
+    echo "$1" | awk NF
+}
+
+function awk_status()
+{
+    FILTERED_INPUT="$1"
+    CHOSEN_CURRENCY="$2"
+    echo "$FILTERED_INPUT" | awk -F';' -v curr="$CHOSEN_CURRENCY" '$3 == curr {sum+=$NF} END {printf "%s : %.4f\n", curr, sum}'
+}
 #
 # function awk_profit()
 # {
@@ -171,8 +180,11 @@ done
 
 result=""
 for log in "${logs[@]}"; do 
-    result+=$(awk_list)
+    result+="$(awk_list "$uzivatel" "$log")"
+    result+=$'\n'
 done
+
+result="$(sanitize_blank_lines "$result")"
     
 
 case "$selected_option" in
@@ -180,29 +192,32 @@ case "$selected_option" in
         echo "$result"
         ;;
     list-currency) 
-        awk_list_currency
+        awk_list_currency "$result"
         ;;
     status)
+        
+        # For each currency
+        while IFS= read -r curr; do
+            awk_status "$result" "$curr"
+        done <<< "$(awk_list_currency "$result")"
         ;;
     profit)
-        ;;
-    *) echo default
         ;;
 esac
 
 
-echo "Uzivatel: $uzivatel"
-echo "Files:"
-for file in "${logs[@]}"; do
-    echo "$file"
-done
-
-echo ""
-echo "ALL ARGS, VARS"
-
-echo "-a $after -b $before -c $currency option: $selected_option"
-
-echo "$# num; , $*"
+# echo "Uzivatel: $uzivatel"
+# echo "Files:"
+# for file in "${logs[@]}"; do
+#     echo "$file"
+# done
+#
+# echo ""
+# echo "ALL ARGS, VARS"
+#
+# echo "-a $after -b $before -c $currency option: $selected_option"
+#
+# echo "$# num; , $*"
 
 
 
