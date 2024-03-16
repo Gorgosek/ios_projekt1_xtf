@@ -76,6 +76,7 @@ function make_timestamp(){
 # JMENO UZIVATELE;DATUM A CAS;MENA;HODNOTA
 #
 # function check_logfile(){
+#     
 #
 # }
 
@@ -89,6 +90,11 @@ function awk_list ()
         awk -F';' -v uziv="$USERNAME" '$1 == uziv {print $0}' "$LOGFILE" 
     fi
 }
+
+# function order_byDate(){
+#     INPUT="$1"
+#     echo "$INPUT" | sort
+# }
 
 function apply_filters(){
     INPUT="$1"
@@ -155,7 +161,20 @@ function awk_status()
 {
     FILTERED_INPUT="$1"
     CHOSEN_CURRENCY="$2"
-    echo "$FILTERED_INPUT" | awk -F';' -v curr="$CHOSEN_CURRENCY" '$3 == curr {sum+=$NF} END {printf "%s : %.4f\n", curr, sum}'
+    echo "$FILTERED_INPUT" | awk -F';' -v curr="$CHOSEN_CURRENCY" '
+    BEGIN{
+        sum=0;
+    } 
+
+    {
+        if($3 == curr){
+            sum+=$NF;
+        }
+    } END {
+        if(sum != 0)
+            printf "%s : %.4f\n", curr, sum;
+    }
+    '
 }
 
 # Set the profit variable if not set
