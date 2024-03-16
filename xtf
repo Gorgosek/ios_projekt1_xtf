@@ -189,6 +189,8 @@ uzivatel=""
 logs=()
 datetimeB=""
 datetimeA=""
+after=""
+before=""
 currency=()
 
 # Display help and exit, ignore all the other arguments
@@ -197,76 +199,77 @@ if [[ "$args" == *"--help"* || "$args" == *"-h"* ]]; then
     exit 0
 fi
 
-after=""
-before=""
-
-# Set variables based on arguments
-while getopts ":a:b:c:" opt; do
-    case "${opt}" in
-        a) 
-            if [[ -n "$datetimeA" ]]; then
-                print_error "Invalid -a flag use" 1
-            fi
-            datetimeA="$OPTARG"
-            after=$(check_datetime "$datetimeA")
-            ;;
-        b) 
-            if [[ -n "$datetimeB" ]]; then
-                print_error "Invalid -b flag use" 1
-            fi
-            datetimeB="$OPTARG"
-            before=$(check_datetime "$datetimeB")
-            ;;
-        c) 
-            currency+=("$OPTARG")
-            ;;
-        \?) 
-            echo "Invalid arguments specified - $OPTARG"
-            exit 1
-            ;;
-    esac
-done
-
-# Throws an error if check_datetime exits with 1
-throw_error 
-
-shift $((OPTIND -1))
-
 option_count=0
 selected_option=""
 
-for option in "$@"; do
-    case "$option" in
+while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+        -a | -b | -c)
+            # Sets variables depending on the flags
+            while getopts ":a:b:c:" opt;do
+                case "${opt}" in
+                    a) 
+                        if [[ -n "$datetimeA" ]]; then
+                            print_error "Invalid -a flag use" 1
+                        fi
+                        datetimeA="$OPTARG"
+                        after=$(check_datetime "$datetimeA")
+                        ;;
+                    b) 
+                        if [[ -n "$datetimeB" ]]; then
+                            print_error "Invalid -b flag use" 1
+                        fi
+                        datetimeB="$OPTARG"
+                        before=$(check_datetime "$datetimeB")
+                        ;;
+                    c) 
+                        currency+=("$OPTARG")
+                        ;;
+                    \?) 
+                        echo "Invalid arguments specified - $OPTARG"
+                        exit 1
+                        ;;
+                esac
+            done
+            throw_error 
+            shift $((OPTIND -1))
+            ;;
         list | list-currency | status | profit)
-            selected_option="$option"
+            # Set option and check for incorrect input
+            selected_option="$1"
             ((option_count++))
             if [[ "$option_count" -gt 1 ]]; then
                 print_error "Too many options selected chose only one!" 1
             fi
             shift
             ;;
+        -*)
+            echo "Invalid option: $1"
+            exit 1
+            ;;
+        *)
+            # Check's if a string matches a file or sets it as the username
+            if [[ -f "$1" ]]; then
+                logs+=("$1")
+            elif [[ -z "$uzivatel" ]]; then
+                uzivatel="$1"
+            else
+                print_error "$1 Doesn't match any parameters use --help" 1
+            fi
+            shift
+            ;;    
     esac
+    
 done
 
-
+# When option not set default=list
 if [[ "$selected_option" == "" && "$option_count" -eq 0 ]]; then
     selected_option="list"
 fi
 
-for arg in "$@"; do 
-    if [[ -f "$arg" ]]; then
-        logs+=("$arg")
-    else
-        if [[ -n "$uzivatel" ]]; then
-            echo "Too many non-file arguments $*"
-            exit 1
-        else
-            uzivatel="$arg"
-        fi
-    fi
-done
 
-# Put awk_list output into $result
+# Parse all logs where $uzivatel is present and output to the screen
+# $result - holds awk output
 result=""
 for log in "${logs[@]}"; do 
     result+="$(awk_list "$uzivatel" "$log")"
@@ -311,5 +314,3 @@ case "$selected_option" in
         done <<< "$(awk_list_currency "$result")"
         ;;
 esac
-
-
