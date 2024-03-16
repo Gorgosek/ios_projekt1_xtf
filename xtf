@@ -68,6 +68,11 @@ function check_datetime(){
     fi
 }
 
+function make_timestamp(){
+    VAR="$1"
+    awk -v var="$VAR" 'BEGIN{if(var != "") output=mktime(gensub(/[-:]/, "  ", "g", var)); else output=-1;print output}'
+}
+
 # TODO create functions for each of the options then combine them using | and solve for all
 # JMENO UZIVATELE;DATUM A CAS;MENA;HODNOTA
 XTF_PROFIT=0.2
@@ -80,9 +85,30 @@ function awk_list ()
 }
 
 # TODO man awk /mktime for timestamp conversion
-# function apply_filters(){
-#
-# }
+function apply_filters(){
+    INPUT="$1"
+    CHOSEN_CURRENCY="$2"
+    echo "$INPUT" | awk -F';' -v curr="$CHOSEN_CURRENCY" -v a="$after" -v b="$before" -v c="$CHOSEN_CURRENCY" '
+    BEGIN{ 
+        if(a == "") a=-1;
+        else
+            a=mktime(gensub(/[-:]/,"  ", "g",$2))
+        if(b == "") b=-1;
+        if(c == "") c=-1;
+    } 
+    {
+        if(a != 
+        if ($3 == curr) {
+            if ($NF > 0) {
+                sum += ($NF * (1 + prof))
+            } else {
+                sum += $NF
+            }
+        }
+    } END {
+        printf "%s : %.4f\n", curr, sum
+    }'
+}
 
 function awk_list_currency ()
 {
