@@ -88,25 +88,51 @@ function awk_list ()
 function apply_filters(){
     INPUT="$1"
     CHOSEN_CURRENCY="$2"
-    echo "$INPUT" | awk -F';' -v curr="$CHOSEN_CURRENCY" -v a="$after" -v b="$before" -v c="$CHOSEN_CURRENCY" '
+    echo "$INPUT" | awk -F';' -v curr="$CHOSEN_CURRENCY" -v a="$(make_timestamp "$after")" -v b="$(make_timestamp "$before")" -v c="$CHOSEN_CURRENCY" '
     BEGIN{ 
-        if(a == "") a=-1;
-        else
-            a=mktime(gensub(/[-:]/,"  ", "g",$2))
-        if(b == "") b=-1;
-        if(c == "") c=-1;
+        t=0;
+        throwAway=0;
     } 
     {
-        if(a != 
-        if ($3 == curr) {
-            if ($NF > 0) {
-                sum += ($NF * (1 + prof))
+        t=mktime(gensub(/[-:]/, "  ", "g", $2));
+
+        if(a != -1){
+            if(t>a){
+                throwAway=0;
             } else {
-                sum += $NF
+                throwAway=1;
+                next;
             }
+        } else{
+            throwAway=0;
         }
-    } END {
-        printf "%s : %.4f\n", curr, sum
+
+        if(b != -1){
+            if(t<b){
+                throwAway=0;
+            } else {
+                throwAway=1;
+                next;
+            }
+        } else{
+            throwAway=0;
+        }
+
+        if(c != ""){
+            if(c == $3){
+                throwAway=0;
+            } else {
+                throwAway=1;
+                next;
+            }
+        } else{
+            throwAway=0;
+        }
+
+        if(throwAway != 1){
+            print $0;
+        }
+        
     }'
 }
 
@@ -230,6 +256,8 @@ for log in "${logs[@]}"; do
 done
 
 result="$(sanitize_blank_lines "$result")"
+
+result="$(apply_filters "$result" "$currency")"
     
 
 case "$selected_option" in
