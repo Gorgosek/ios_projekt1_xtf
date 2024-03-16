@@ -81,7 +81,11 @@ function awk_list ()
 {
     USERNAME="$1"
     LOGFILE="$2"
-    awk -F';' -v uziv="$USERNAME" '$1 == uziv {print $0}' "$LOGFILE" 
+    if [[ "$LOGFILE" == *.gz ]]; then
+        gunzip -c "$LOGFILE" | awk -F';' -v uziv="$USERNAME" '$1 == uziv {print $0}'        
+    else
+        awk -F';' -v uziv="$USERNAME" '$1 == uziv {print $0}' "$LOGFILE" 
+    fi
 }
 
 # TODO man awk /mktime for timestamp conversion
@@ -253,28 +257,31 @@ for arg in "$@"; do
     fi
 done
 
+# Put awk_list output into $result
 result=""
 for log in "${logs[@]}"; do 
     result+="$(awk_list "$uzivatel" "$log")"
     result+=$'\n'
 done
-
 result="$(sanitize_blank_lines "$result")"
+
+
+# Apply filters
 prev_result="$result"
-
 result=""
-if [[ ${#currency[@]} -eq 0 ]]; then
-    result+="$(apply_filters "$prev_result" "")"
-else
-    for crypto in "${currency[@]}"; do
-        result+="$(apply_filters "$prev_result" "$crypto")"
-        result+=$'\n'
-    done
+if [[ -n $prev_result ]]; then
+    if [[ ${#currency[@]} -eq 0 ]]; then
+        result+="$(apply_filters "$prev_result" "")"
+    else
+        for crypto in "${currency[@]}"; do
+            result+="$(apply_filters "$prev_result" "$crypto")"
+            result+=$'\n'
+        done
+    fi
 fi
-
 result="$(sanitize_blank_lines "$result")"
     
-
+# Use functions to display final filtered output
 case "$selected_option" in
     list)
         echo "$result"
@@ -283,14 +290,13 @@ case "$selected_option" in
         awk_list_currency "$result"
         ;;
     status)
-        
-        # For each currency
+        # For each currency found using awk_list_currency
         while IFS= read -r curr; do
             awk_status "$result" "$curr"
         done <<< "$(awk_list_currency "$result")"
         ;;
     profit)
-        # For each currency
+        # For each currency found using awk_list_currency
         while IFS= read -r curr; do
             awk_profit "$result" "$curr"
         done <<< "$(awk_list_currency "$result")"
