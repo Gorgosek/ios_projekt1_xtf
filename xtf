@@ -216,6 +216,7 @@ while [[ "$#" -gt 0 ]]; do
                         fi
                         datetimeA="$OPTARG"
                         after=$(check_datetime "$datetimeA")
+                        throw_error 
                         ;;
                     b) 
                         if [[ -n "$datetimeB" ]]; then
@@ -223,6 +224,7 @@ while [[ "$#" -gt 0 ]]; do
                         fi
                         datetimeB="$OPTARG"
                         before=$(check_datetime "$datetimeB")
+                        throw_error 
                         ;;
                     c) 
                         currency+=("$OPTARG")
@@ -233,7 +235,6 @@ while [[ "$#" -gt 0 ]]; do
                         ;;
                 esac
             done
-            throw_error 
             shift $((OPTIND -1))
             ;;
         list | list-currency | status | profit)
