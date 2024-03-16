@@ -79,6 +79,11 @@ function awk_list ()
     awk -F';' -v uziv="$USERNAME" '$1 == uziv {print $0}' "$LOGFILE" 
 }
 
+# TODO man awk /mktime for timestamp conversion
+# function apply_filters(){
+#
+# }
+
 function awk_list_currency ()
 {
     FILTERED_INPUT="$1"
