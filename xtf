@@ -75,7 +75,6 @@ function make_timestamp(){
 
 # TODO create functions for each of the options then combine them using | and solve for all
 # JMENO UZIVATELE;DATUM A CAS;MENA;HODNOTA
-XTF_PROFIT=0.2
 
 function awk_list ()
 {
@@ -157,14 +156,24 @@ function awk_status()
     echo "$FILTERED_INPUT" | awk -F';' -v curr="$CHOSEN_CURRENCY" '$3 == curr {sum+=$NF} END {printf "%s : %.4f\n", curr, sum}'
 }
 
+# Set the profit variable if not set
+if [[ -z $XTF_PROFIT ]]; then
+    XTF_PROFIT=20
+fi
+
 function awk_profit()
 {
     FILTERED_INPUT="$1"
     CHOSEN_CURRENCY="$2"
-    echo "$FILTERED_INPUT" | awk -F';' -v curr="$CHOSEN_CURRENCY" -v prof=$XTF_PROFIT '{
+    echo "$FILTERED_INPUT" | awk -F';' -v curr="$CHOSEN_CURRENCY" -v prof=$XTF_PROFIT '
+    BEGIN {
+        calcProf=(1+prof/100);
+    }
+
+    {
         if ($3 == curr) {
             if ($NF > 0) {
-                sum += ($NF * (1 + prof))
+                sum += ($NF * calcProf)
             } else {
                 sum += $NF
             }
