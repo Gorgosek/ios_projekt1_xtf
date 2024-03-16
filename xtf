@@ -73,8 +73,11 @@ function make_timestamp(){
     awk -v var="$VAR" 'BEGIN{if(var != "") output=mktime(gensub(/[-:]/, "  ", "g", var)); else output=-1;print output}'
 }
 
-# TODO create functions for each of the options then combine them using | and solve for all
 # JMENO UZIVATELE;DATUM A CAS;MENA;HODNOTA
+#
+# function check_logfile(){
+#
+# }
 
 function awk_list ()
 {
@@ -87,7 +90,6 @@ function awk_list ()
     fi
 }
 
-# TODO man awk /mktime for timestamp conversion
 function apply_filters(){
     INPUT="$1"
     CHOSEN_CURRENCY="$2"
@@ -261,6 +263,10 @@ while [[ "$#" -gt 0 ]]; do
     esac
     
 done
+
+if [[ -z "$uzivatel" ]]; then
+    print_error "User not specified" 1
+fi
 
 # When option not set default=list
 if [[ "$selected_option" == "" && "$option_count" -eq 0 ]]; then
