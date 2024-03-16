@@ -176,7 +176,7 @@ uzivatel=""
 logs=()
 datetimeB=""
 datetimeA=""
-currency=""
+currency=()
 
 # Display help and exit, ignore all the other arguments
 if [[ "$args" == *"--help"* || "$args" == *"-h"* ]]; then
@@ -191,15 +191,21 @@ before=""
 while getopts ":a:b:c:" opt; do
     case "${opt}" in
         a) 
+            if [[ -n "$datetimeA" ]]; then
+                print_error "Invalid -a flag use" 1
+            fi
             datetimeA="$OPTARG"
             after=$(check_datetime "$datetimeA")
             ;;
         b) 
+            if [[ -n "$datetimeB" ]]; then
+                print_error "Invalid -b flag use" 1
+            fi
             datetimeB="$OPTARG"
             before=$(check_datetime "$datetimeB")
             ;;
         c) 
-            currency="$OPTARG"
+            currency+=("$OPTARG")
             ;;
         \?) 
             echo "Invalid arguments specified - $OPTARG"
@@ -221,12 +227,10 @@ for option in "$@"; do
         list | list-currency | status | profit)
             selected_option="$option"
             ((option_count++))
-            shift
-            ;;
-        *)
             if [[ "$option_count" -gt 1 ]]; then
                 print_error "Too many options selected chose only one!" 1
             fi
+            shift
             ;;
     esac
 done
@@ -256,8 +260,19 @@ for log in "${logs[@]}"; do
 done
 
 result="$(sanitize_blank_lines "$result")"
+prev_result="$result"
 
-result="$(apply_filters "$result" "$currency")"
+result=""
+if [[ ${#currency[@]} -eq 0 ]]; then
+    result+="$(apply_filters "$prev_result" "")"
+else
+    for crypto in "${currency[@]}"; do
+        result+="$(apply_filters "$prev_result" "$crypto")"
+        result+=$'\n'
+    done
+fi
+
+result="$(sanitize_blank_lines "$result")"
     
 
 case "$selected_option" in
@@ -281,20 +296,5 @@ case "$selected_option" in
         done <<< "$(awk_list_currency "$result")"
         ;;
 esac
-
-
-# echo "Uzivatel: $uzivatel"
-# echo "Files:"
-# for file in "${logs[@]}"; do
-#     echo "$file"
-# done
-#
-# echo ""
-# echo "ALL ARGS, VARS"
-#
-# echo "-a $after -b $before -c $currency option: $selected_option"
-#
-# echo "$# num; , $*"
-
 
 
