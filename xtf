@@ -89,11 +89,13 @@ function check_logfile(){
                 if(length($3) < 3){
                     exit fail;
                 }
+                if($2 !~ /^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01]) ([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/)
+                    exit fail;
 
         }'
         
         else
-            tr -d '\0' < "$LOGFILE" | awk -F ';' '
+            awk -F ';' '
             BEGIN { fail=1; }
             {
                 if(NF != 4) exit fail;
@@ -105,30 +107,14 @@ function check_logfile(){
                     if(length($3) < 3){
                         exit fail;
                     }
-
-                }' 
+                    if($2 !~ /^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01]) ([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/)
+                        exit fail;
+                }' "$LOGFILE" 
     fi
 
     if [[ "$?" -ne 0 ]]; then
         print_error "Wrong field format in file $LOGFILE" 1
     fi
-
-    if [[ "$LOGFILE" == *.gz ]]; then
-        gunzip -c "$LOGFILE" | tr -d '\0' | awk -F ';' '{ print $2 }'
-    else
-        tr -d '\0' < "$LOGFILE" | awk -F ';' '{ print $2 }'
-        fi | while IFS= read -r datebayyo; do
-        if ! echo "$datebayyo" | grep -Eq '^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01]) ([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$' ; then
-            print_error "Wrong date format inside file $LOGFILE" 1
-        fi
-
-        output=$(check_datetime "$datebayyo")
-
-        if [[ "$?" -ne 0 ]]; then
-            print_error "Invalid date format inside file $LOGFILE" 1
-        fi
-
-    done
 }
 
 function awk_list ()
@@ -142,7 +128,6 @@ function awk_list ()
     fi
 }
 
-# TODO Filter for all currencies simutaniously using grep or smth
 function apply_filters(){
     INPUT="$1"
     CHOSEN_CURRENCY="$2"
