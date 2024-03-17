@@ -47,10 +47,7 @@ NORMAL='\033[0m'
 test_count=0
 correct=0
 
-# compile maze.c just in case
-
 rm -rf diff
-
 
 
 run_test() {
@@ -390,6 +387,16 @@ echo -e "Trader1;2024-01-15 15:30:42;EUR;-2000.0000\nTrader2;2024-01-15 15:31:12
 args=("list" "Trader1" "missing_value.log")
 run_test "" "${args[@]}"
 
+# 43 invalid currency code
+args=("-c" "ab1" "Trader1" "cryptoexchange.log")
+run_test "" "${args[@]}"
+
+# 44 no permissions to access file
+echo -e "Trader1;2024-01-15 15:30:42;EUR;-2000.0000\nTrader2;2024-01-15 15:31:12;BTC;-9.8734\nTrader1;2024-01-16 18:06:32;USD;-3000.0000\nCryptoWiz;2024-01-17 08:58:09;CZK;10000.0000\nTrader1;2024-01-20 11:43:02;ETH;1.9417\nTrader1;2024-01-22 09:17:40;ETH;10.9537" > no_perms.log
+chmod 222 no_perms.log # no read access to file no_perms.log, only write access
+args=("Trader1" "no_perms.log")
+run_test "" "${args[@]}"
+
 
 # print test results
 if [[ "$correct" == "$test_count" ]]; then
@@ -411,3 +418,4 @@ rm "invalid_date.log"
 rm "missing_name.log"
 rm "missing_currency.log"
 rm "missing_value.log"
+rm "no_perms.log"
