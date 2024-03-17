@@ -150,6 +150,7 @@ function apply_filters(){
     BEGIN{ 
         t=0;
         throwAway=0;
+        n = split(curr, currencies, " ");
     } 
     {
         t=mktime(gensub(/[-:]/, "  ", "g", $2));
@@ -177,11 +178,12 @@ function apply_filters(){
         }
 
         if(c != ""){
-            if(c == $3){
-                throwAway=0;
-            } else {
-                throwAway=1;
-                next;
+            throwAway=1;
+            for(i = 1; i <=n; i++){
+                if($3 == currencies[i]){
+                    throwAway=0;
+                    break;
+                }
             }
         } else{
             throwAway=0;
@@ -340,17 +342,15 @@ if [[ "$selected_option" == "" && "$option_count" -eq 0 ]]; then
     selected_option="list"
 fi
 
-# Checks whether given files are in a correct format
-for log in "${logs[@]}"; do 
-    check_logfile "$log"
-    throw_error
-done
-
 
 # Parse all logs where $uzivatel is present and output to the screen
 # $result - holds awk output
 result=""
 for log in "${logs[@]}"; do 
+    # Checks whether given files are in a correct format
+    check_logfile "$log"
+    throw_error
+    # Adds lines containing username to the $result string 
     result+="$(awk_list "$uzivatel" "$log")"
     result+=$'\n'
 done
@@ -360,14 +360,14 @@ result="$(sanitize_blank_lines "$result")"
 # Apply filters
 prev_result="$result"
 result=""
+IFS=" " 
+currency_string="${currency[*]}"
 if [[ -n $prev_result ]]; then
     if [[ ${#currency[@]} -eq 0 ]]; then
         result+="$(apply_filters "$prev_result" "")"
     else
-        for crypto in "${currency[@]}"; do
-            result+="$(apply_filters "$prev_result" "$crypto")"
-            result+=$'\n'
-        done
+        result+="$(apply_filters "$prev_result" "$currency_string")"
+        result+=$'\n'
     fi
 fi
 result="$(sanitize_blank_lines "$result")"
