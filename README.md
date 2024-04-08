@@ -1,4 +1,5 @@
-# IOS Projekt html zadani v adr zadani
+# IOS Projekt 1
+- **Assignment specification**: pdf file at `zadani/ios_xtf_zadani.pdf`
 - **Final Grade**: 15.5/15 (.5 extra)
 
 ```
